@@ -1,0 +1,84 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Monster : MonoBehaviour
+{
+    public PlayerManager _playerManager;
+    public GameManager _gameManager;
+    public BattleManager _battleManager;
+
+    public int hpMonster; // Текущее здоровье
+    public int hpMaxMonster; // Максимальное здоровье при появлении
+    public int setHpMinMonster; // Минимальное колличество здоровья
+    public int setHpMaxMonster; // Максимальное рандомное колличество здоровья
+
+    public int damageMonster; // Урон монстра при появлении
+    public int setMinDamageMonster; // Минимальный урон монстра
+    public int setMaxDamageMonster; // Максимальный урон монстра
+    [SerializeField] private float hitMonsterTime; // Время атаки монстра
+    [SerializeField] private float setHitMonsterMinTime; // Время атаки монстра
+    [SerializeField] private float setHitMonsterMaxTime; // Время атаки монстра
+    [SerializeField] private float hitMonsterTimer;
+
+    [SerializeField] private int goldMonster; // Золото с монстра
+    [SerializeField] private int minGoldMonster; // Минимум золота с монстра
+    [SerializeField] private int maxGoldMonster; // Максимум золота с монстра
+
+    private void Start()
+    {
+        _playerManager = GameObject.FindObjectOfType<PlayerManager>();
+        _gameManager = GameObject.FindObjectOfType<GameManager>();
+        _battleManager = GameObject.FindObjectOfType<BattleManager>();
+        SetDamageAndHealthMonsterAndTimeHit();
+        hpMonster = hpMaxMonster;
+    }
+
+    private void Update()
+    {
+        HitMonster();
+        if (hpMonster <= 0)
+        {
+            int bonusGold = Random.Range(minGoldMonster, maxGoldMonster);
+            goldMonster = bonusGold * _playerManager.lvlPlayer;
+            _gameManager.gold += goldMonster;
+            Destroy(gameObject);
+        }
+    }
+
+    private void SetDamageAndHealthMonsterAndTimeHit()
+    {
+        hitMonsterTime = Random.Range(setHitMonsterMinTime, setHitMonsterMaxTime);
+        hitMonsterTimer = hitMonsterTime;
+        hpMaxMonster = Random.Range(setHpMinMonster, setHpMaxMonster);
+        hpMaxMonster = hpMaxMonster * _playerManager.lvlPlayer;
+        damageMonster = Random.Range(setMinDamageMonster, setMaxDamageMonster);
+        damageMonster = damageMonster + damageMonster * _playerManager.lvlPlayer;
+    }
+
+    private void OnMouseDown()
+    {
+        hpMonster -= _playerManager.damagePlayer;
+        _battleManager.monsterHealthSlider.value = hpMonster;
+        GetComponent<Animation>().Play("MonsterHitAnimation");
+    }
+
+    private void HitMonster()
+    {
+        hitMonsterTimer -= Time.deltaTime;
+        if (hitMonsterTimer <= 0)
+        {
+            if (_playerManager.armorPlayer > 0)
+            {
+                float d = damageMonster / 100f * _playerManager.armorPlayer;
+                int damage = damageMonster - Mathf.RoundToInt(d);
+                _playerManager.hpPlayer -= damage;
+            }
+            else
+            {
+                _playerManager.hpPlayer -= damageMonster;
+            }
+            hitMonsterTimer = hitMonsterTime;
+        }
+    }
+}
