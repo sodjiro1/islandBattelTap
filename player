@@ -1,0 +1,173 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class PlayerManager : MonoBehaviour
+{
+    public int lvlPlayer { get; set; } // Уровень игрока
+    public int hpPlayer { get; set; } // Количество жизни игрока
+    public int maxHpPlayer { get; set; } // Максимально количество жизни игрока
+    public int damagePlayer { get; set; } // Урон игрока
+    public int armorPlayer; // Броня игрока
+    public int playerClick; // Сила добычи игроком (сколько ед. ресурса получит за раз + основной показатель ресурса)
+
+    public int equipmentArmor; // Псевдо уровень брони, для отслеживания какая броня куплена
+    public int equipmentWeapons; // Псевдо уровень оружия, для отслеживания какое оружие куплено
+    public Slider playerHealthSlider; // Слайдер жизни игрока в битве
+    public Slider playerHealthSliderPanelInventoriFood; // Слайдер жизни игрока в меню еды
+    private float autoHealingTime;
+    private float autoHealingTimer;
+
+    public bool effectPotionStrength = false;
+    public float strengthTime = 20f;
+    public float strengthTimer;
+    public Image strengthTimerImg;
+    public Image strengthTimerImgBoss;
+
+    public bool effectPotionArmor = false;
+    public float armorTime = 20f;
+    public float armorTimer;
+    public Image armorTimerImg;
+    public Image armorTimerImgBoss;
+
+    [SerializeField] private Text hpPlayerText;
+    [SerializeField] private Text damagePlayerText;
+    [SerializeField] private Text armorPlayerText;
+    [SerializeField] private Text hpPlayerPanelInventoriFoodText;
+
+    public bool loadHpBoss = false; // Переменнная для разовой установки жизни боссу при загрузке. Через переменную hpMonsterBossLoad
+    public int hpMonsterBossLoad;
+
+
+    void Start()
+    {
+        lvlPlayer = 1;
+        damagePlayer = 5;
+        maxHpPlayer = 10000;
+        hpPlayer = maxHpPlayer;
+        armorPlayer = 0;
+        playerClick = 1;
+        equipmentArmor = 1;
+        equipmentWeapons = 1;
+        playerHealthSlider.value = maxHpPlayer;
+        playerHealthSlider.maxValue = maxHpPlayer;
+        playerHealthSliderPanelInventoriFood.value = maxHpPlayer;
+        playerHealthSliderPanelInventoriFood.maxValue = maxHpPlayer;
+        autoHealingTime = 10f;
+        autoHealingTimer = autoHealingTime;
+    }
+
+    void Update()
+    {
+        if (hpPlayer > maxHpPlayer)
+        {
+            hpPlayer = maxHpPlayer;
+        }
+        playerHealthSlider.maxValue = maxHpPlayer;
+        playerHealthSlider.value = hpPlayer;
+
+        playerHealthSliderPanelInventoriFood.maxValue = maxHpPlayer;
+        playerHealthSliderPanelInventoriFood.value = hpPlayer;
+        TimerEffectPotionStrength();
+        TimerEffectPotionArmor();
+        AutoHealing();
+        PlayerTextUpdate();
+    }
+
+    public void EffectPotionStrength() // Эффект зелья силы
+    {
+        if (effectPotionStrength == false)
+        {
+            strengthTimer = strengthTime;
+            effectPotionStrength = true;
+            damagePlayer += 100;
+        }
+    }
+    public void EffectPotionArmor() // Эффект зелья брони
+    {
+        if (effectPotionArmor == false)
+        {
+            armorTimer = armorTime;
+            effectPotionArmor = true;
+            armorPlayer += 50;
+        }
+    }
+
+    private void TimerEffectPotionStrength()
+    {
+        if (strengthTimer <= 0)
+        {
+            if (effectPotionStrength == true)
+            {
+                effectPotionStrength = false;
+                damagePlayer -= 100;
+                strengthTimerImg.fillAmount = 1f;
+                strengthTimerImgBoss.fillAmount = 1f;
+            }
+        }
+        else
+        {
+            strengthTimer -= Time.deltaTime;
+            strengthTimerImg.fillAmount = strengthTimer / strengthTime;
+            strengthTimerImgBoss.fillAmount = strengthTimer / strengthTime;
+        }
+    }
+    private void TimerEffectPotionArmor()
+    {
+        if (armorTimer <= 0)
+        {
+            if (effectPotionArmor == true)
+            {
+                effectPotionArmor = false;
+                armorPlayer -= 50;
+                armorTimerImg.fillAmount = 1f;
+                armorTimerImgBoss.fillAmount = 1f;
+            }
+        }
+        else
+        {
+            armorTimer -= Time.deltaTime;
+            armorTimerImg.fillAmount = armorTimer / armorTime;
+            armorTimerImgBoss.fillAmount = armorTimer / armorTime;
+        }
+    }
+
+    private void AutoHealing() // Регенерация игрока
+    {
+        autoHealingTimer -= Time.deltaTime;
+        if (autoHealingTimer <= 0)
+        {
+            hpPlayer += Random.Range(2, 7) * lvlPlayer;
+            autoHealingTimer = autoHealingTime;
+        }
+    }
+
+    private void PlayerTextUpdate()
+    {
+        hpPlayerText.text = $"Ваше здоровье: {hpPlayer.ToString()}/{maxHpPlayer.ToString()}";
+        damagePlayerText.text = damagePlayer.ToString();
+        armorPlayerText.text = armorPlayer.ToString();
+        hpPlayerPanelInventoriFoodText.text = $"Ваше здоровье: {hpPlayer.ToString()}/{maxHpPlayer.ToString()}";
+    }
+
+    public void NewGamePlayer()
+    {
+        lvlPlayer = 1;
+        playerClick = 1;
+        effectPotionStrength = false;
+        strengthTimerImg.fillAmount = 1f;
+        strengthTimerImgBoss.fillAmount = 1f;
+        strengthTimer = 0;
+        effectPotionArmor = false;
+        armorTimerImg.fillAmount = 1f;
+        armorTimerImgBoss.fillAmount = 1f;
+        armorTimer = 0;
+
+        maxHpPlayer = 100;
+        hpPlayer = maxHpPlayer;
+        damagePlayer = 5;
+        armorPlayer = 0;
+        hpMonsterBossLoad = 10000000;
+    }
+}
